@@ -1,163 +1,103 @@
+# Versione Streamlit della tua app con icona personalizzata
 import streamlit as st
-from datetime import date, timedelta
-import locale
 import json
 import os
+from datetime import date, timedelta
+from PIL import Image
 
+FILE_DATI = "dati_polli.json"
 
-
-
-st.set_page_config(
-    page_title="Gestione Polli e Mangime",
-    page_icon="icona.ico",  # oppure .png
-    layout="centered"
-)
-
-import locale
-
-# Tenta le localizzazioni più comuni
-def imposta_locale_italiano():
-    for loc in ['it_IT.utf8', 'it_IT.UTF-8', 'it_IT', 'italian']:
-        try:
-            locale.setlocale(locale.LC_TIME, loc)
-            return
-       
-imposta_locale_italiano()
-
-
-
-
-
-def login():
-    password = st.text_input("Inserisci la password per accedere:", type="password")
-    if password == "PolLarino":
-        return True
-    else:
-        if password:
-            st.error("Password errata!")
-        return False
-
-if login():
-    st.write("Benvenuto nella app!")
-    # resto dell'app qui
-else:
-    st.stop()
-
+# ---------------- Funzioni per i dati ---------------- #
+def salva_dati(dati):
+    with open(FILE_DATI, "w") as f:
+        json.dump(dati, f)
 
 def carica_dati():
-    if "dati_salvati" not in st.session_state:
-        if os.path.exists(FILE_DATI):
-            with open(FILE_DATI, "r") as f:
-                st.session_state.dati_salvati = json.load(f)
-        else:
-            st.session_state.dati_salvati = {
-                "box1_maschi": 0,
-                "box1_femmine": 0,
-                "box2_maschi": 0,
-                "box2_femmine": 0
-            }
-
-def salva_dati():
-    with open(FILE_DATI, "w") as f:
-        json.dump(st.session_state.dati_salvati, f)
-
-
-def calcola_mangime(maschi, femmine, mangime, giorno_iniziale):
-    with open("Performance Femmine.txt", "r", encoding="utf-8") as f:
-        valoriF = [float(riga.split()[1]) for riga in f]
-    with open("Performance Maschi.txt", "r", encoding="utf-8") as f:
-        valoriM = [float(riga.split()[1]) for riga in f]
-
-    if giorno_iniziale < 1:
-        return "✅ Il giorno iniziale deve essere almeno 1."
-
-    indice = giorno_iniziale - 1
-    if indice >= len(valoriM) or indice >= len(valoriF):
-        return  "Giorno iniziale oltre i dati disponibili."
-
-    giorni = 0
-    while mangime > 0 and indice < len(valoriM):
-        mangime -= maschi * valoriM[indice] + femmine * valoriF[indice]
-        if mangime >= 0:
-            giorni += 1
-            indice += 1
-        else:
-            break
-
-    futura = date.today() + timedelta(days=giorni)
-    if mangime < 0:
-        return f"❌ Mangime finisce il {futura.strftime('%A %d %B %Y')} (giorno {giorno_iniziale + giorni}). Mancano {abs(mangime):.3f} kg."
-    elif mangime == 0:
-        return f"✅ Mangime finisce esattamente il {futura.strftime('%A %d %B %Y')} (giorno {giorno_iniziale + giorni})."
+    if os.path.exists(FILE_DATI):
+        with open(FILE_DATI, "r") as f:
+            return json.load(f)
     else:
-        return f"✅ Mangime sufficiente fino al {futura.strftime('%A %d %B %Y')} (giorno {giorno_iniziale + giorni}). Rimangono {mangime:.3f} kg."
+        return {
+            "box1_maschi": 0,
+            "box1_femmine": 0,
+            "box2_maschi": 0,
+            "box2_femmine": 0
+        }
 
+# ---------------- Funzione di calcolo ---------------- #
+def esegui_calcolo(maschi, femmine, mangime, giorno_iniziale):
+    try:
+        with open("Performance Femmine.txt", "r", encoding="utf-8") as fileF:
+            valoriF = [float(line.strip().split()[1]) for line in fileF]
 
+        with open("Performance Maschi.txt", "r", encoding="utf-8") as fileM:
+            valoriM = [float(line.strip().split()[1]) for line in fileM]
 
+        indice = giorno_iniziale - 1
 
-# --- Funzione per aggiornare dati BOX ---
-def aggiorna_box(box_num, maschi, femmine):
-    st.session_state.dati_salvati[f"box{box_num}_maschi"] = maschi
-    st.session_state.dati_salvati[f"box{box_num}_femmine"] = femmine
-    salva_dati()
+        if indice >= len(valoriM) or indice >= len(valoriF):
+            return "Errore: il giorno iniziale supera i dati disponibili."
 
-# --- Funzione per inserire morti ---
-def inserisci_morti(box_num, morti_m, morti_f):
-    dati = st.session_state.dati_salvati
-    dati[f"box{box_num}_maschi"] = max(0, dati[f"box{box_num}_maschi"] - morti_m)
-    dati[f"box{box_num}_femmine"] = max(0, dati[f"box{box_num}_femmine"] - morti_f)
-    salva_dati()
+        giorni = 0
+        while mangime > 0 and indice < len(valoriM):
+            consumoM = maschi * valoriM[indice]
+            consumoF = femmine * valoriF[indice]
+            consumo_totale = consumoM + consumoF
+            mangime -= consumo_totale
+            if mangime >= 0:
+                giorni += 1
+                indice += 1
+            else:
+                break
 
-# --- App Streamlit ---
-st.title("🐔 Gestione Polli e Mangime 🐔")
+        oggi = date.today()
+        futura = oggi + timedelta(days=giorni)
 
+        if mangime < 0:
+            return (f"Mangime insufficiente dopo il giorno {indice}.\n"
+                    f"Ultimo giorno completo: {futura.strftime('%A %d %B %Y')}\n"
+                    f"Mangime residuo: {mangime + consumoF + consumoM:.3f} kg")
+        elif mangime == 0:
+            return f"Mangime terminato esattamente il {futura.strftime('%A %d %B %Y')}"
+        else:
+            return (f"Mangime sufficiente fino al {futura.strftime('%A %d %B %Y')}\n"
+                    f"Mangime residuo: {mangime:.3f} kg")
 
+    except Exception as e:
+        return f"Errore: {str(e)}"
 
+# ---------------- Streamlit App ---------------- #
+icon_path = "icona.ico"
+if os.path.exists(icon_path):
+    st.set_page_config(page_title="Gestione Polli", page_icon=Image.open(icon_path), layout="centered")
+else:
+    st.set_page_config(page_title="Gestione Polli", page_icon="🐔", layout="centered")
 
-carica_dati()
+st.title("Gestione Polli e Mangime")
+dati = carica_dati()
 
-# Mostra stato attuale
-st.subheader("Stato attuale dei BOX")
-st.write(f"BOX 1 - Maschi: {st.session_state.dati_salvati['box1_maschi']}, Femmine: {st.session_state.dati_salvati['box1_femmine']}")
-st.write(f"BOX 2 - Maschi: {st.session_state.dati_salvati['box2_maschi']}, Femmine: {st.session_state.dati_salvati['box2_femmine']}")
+with st.sidebar:
+    st.header("Dati Box")
+    dati["box1_maschi"] = st.number_input("Box 1 - Maschi", 0, 1000, dati["box1_maschi"])
+    dati["box1_femmine"] = st.number_input("Box 1 - Femmine", 0, 1000, dati["box1_femmine"])
+    dati["box2_maschi"] = st.number_input("Box 2 - Maschi", 0, 1000, dati["box2_maschi"])
+    dati["box2_femmine"] = st.number_input("Box 2 - Femmine", 0, 1000, dati["box2_femmine"])
+    if st.button("Salva dati"):
+        salva_dati(dati)
+        st.success("Dati salvati correttamente.")
 
-# Sidebar per navigazione funzionalità
-st.sidebar.title("Seleziona funzione")
-funzione = st.sidebar.radio("", ["Modifica BOX", "Inserisci Polli Morti", "Calcolo Mangime"])
+st.header("Simula consumo mangime")
+tipo = st.selectbox("Tipo calcolo", ["misto", "solo maschi", "solo femmine"])
 
-if funzione == "Modifica BOX":
-    st.header("Modifica dati BOX")
-    box_sel = st.selectbox("Seleziona BOX:", [1, 2])
-    dati = st.session_state.dati_salvati
-    maschi_in = st.number_input(f"Maschi BOX {box_sel}:", min_value=0, value=dati[f"box{box_sel}_maschi"])
-    femmine_in = st.number_input(f"Femmine BOX {box_sel}:", min_value=0, value=dati[f"box{box_sel}_femmine"])
+maschi = femmine = 0
+if tipo in ["misto", "solo maschi"]:
+    maschi = st.number_input("Numero maschi", 0, 1000, 0)
+if tipo in ["misto", "solo femmine"]:
+    femmine = st.number_input("Numero femmine", 0, 1000, 0)
 
-    if st.button("Aggiorna BOX"):
-        aggiorna_box(box_sel, maschi_in, femmine_in)
-        st.success(f"Dati BOX {box_sel} aggiornati!")
+mangime = st.number_input("Mangime disponibile (kg)", 0.0, 9999.0, 0.0, step=0.1)
+giorno = st.number_input("Giorno iniziale (1 = primo giorno)", 1, 100, 1)
 
-elif funzione == "Inserisci Polli Morti":
-    st.header("Inserisci Polli Morti")
-    box_sel = st.selectbox("Seleziona BOX:", [1, 2])
-    morti_m = st.number_input("Maschi morti:", min_value=0, value=0)
-    morti_f = st.number_input("Femmine morte:", min_value=0, value=0)
-
-    if st.button("Aggiorna dati morti"):
-        inserisci_morti(box_sel, morti_m, morti_f)
-        st.success(f"Dati aggiornati per BOX {box_sel} dopo inserimento morti.")
-
-elif funzione == "Calcolo Mangime":
-    st.header("Calcolo durata mangime")
-    tipo_calcolo = st.radio("Seleziona tipo calcolo:", ["Misto", "Solo maschi", "Solo femmine"])
-
-    maschi_input = femmine_input = 0
-    if tipo_calcolo in ["Misto", "Solo maschi"]:
-        maschi_input = st.number_input("Numero maschi:", min_value=0, value=0)
-    if tipo_calcolo in ["Misto", "Solo femmine"]:
-        femmine_input = st.number_input("Numero femmine:", min_value=0, value=0)
-
-    mangime_disponibile = st.number_input("Mangime disponibile (kg):", min_value=0.0, format="%.2f")
-
-    if st.button("Calcola durata mangime"):
-        risultato = calcola_giorni(maschi_input, femmine_input, mangime_disponibile)
-        st.success(risultato)
+if st.button("Calcola durata mangime"):
+    risultato = esegui_calcolo(maschi, femmine, mangime, giorno)
+    st.success(risultato)
