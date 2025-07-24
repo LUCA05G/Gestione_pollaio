@@ -24,7 +24,7 @@ if not st.session_state.autenticato:
             
         else:
             st.error("Password errata.")
-    st.stop()
+    
 
 
 
