@@ -99,7 +99,11 @@ for box_num in [1, 2]:
 
 # Input morti in sidebar, aggiornati in variabili temporanee
 st.sidebar.header("Inserisci Polli Morti")
-st.session_state.box_scelto_temp = st.sidebar.radio("Seleziona BOX", [1, 2], index=st.session_state.box_scelto_temp - 1, key="box_scelto_temp")
+if "box_scelto_temp" not in st.session_state:
+    st.session_state.box_scelto_temp = 1
+
+# Qui NON assegnare il valore, usa solo il widget con key
+st.sidebar.radio("Seleziona BOX", [1, 2], index=st.session_state.box_scelto_temp - 1, key="box_scelto_temp")
 st.session_state.morti_m_temp = st.sidebar.number_input("Maschi morti", min_value=0, step=1, value=st.session_state.morti_m_temp, key="morti_m_temp")
 st.session_state.morti_f_temp = st.sidebar.number_input("Femmine morte", min_value=0, step=1, value=st.session_state.morti_f_temp, key="morti_f_temp")
 
