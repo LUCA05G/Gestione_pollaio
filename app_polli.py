@@ -7,7 +7,12 @@ import os
 
 
 
-st.set_page_config(title="Gestione Polli e Mangime", page_icon=Image.open("icona.ico"), layout="centered")
+st.set_page_config(
+    page_title="Gestione Polli e Mangime",
+    page_icon="icona.ico",  # oppure .png
+    layout="centered"
+)
+
 locale.setlocale(locale.LC_TIME, 'it_IT')
 
 
