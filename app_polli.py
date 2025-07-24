@@ -10,7 +10,8 @@ st.set_page_config(
     layout="centered"
 )
 
-PASSWORD_CORRETTA = "Pollolarino"
+
+PASSWORD_CORRETTA = "pollo25"
 
 if "autenticato" not in st.session_state:
     st.session_state.autenticato = False
@@ -21,12 +22,10 @@ if not st.session_state.autenticato:
     if st.button("Entra"):
         if password == PASSWORD_CORRETTA:
             st.session_state.autenticato = True
-            
+            st.experimental_rerun()
         else:
             st.error("Password errata.")
-    
-st.stop()
-
+    st.stop()
 
 FILE_DATI = "dati_polli.json"
 
