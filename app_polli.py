@@ -13,7 +13,7 @@ st.set_page_config(
     layout="centered"
 )
 
-locale.setlocale(locale.LC_TIME, 'it_IT')
+locale.setlocale(locale.LC_TIME, 'italian')
 
 
 
