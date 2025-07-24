@@ -78,22 +78,24 @@ def esegui_calcolo(maschi, femmine, mangime, giorno_iniziale):
 
 # ---------------- Gestione polli morti ---------------- #
 def mostra_form_morti():
-    st.header("Inserisci polli morti")
-    box = st.radio("Seleziona il BOX:", [1, 2], horizontal=True)
-    morti_m = st.number_input("Maschi morti", min_value=0, step=1)
-    morti_f = st.number_input("Femmine morte", min_value=0, step=1)
-    if st.button("Conferma"):
-        try:
-            if box == 1:
-                dati["box1_maschi"] = max(0, dati["box1_maschi"] - morti_m)
-                dati["box1_femmine"] = max(0, dati["box1_femmine"] - morti_f)
-            else:
-                dati["box2_maschi"] = max(0, dati["box2_maschi"] - morti_m)
-                dati["box2_femmine"] = max(0, dati["box2_femmine"] - morti_f)
-            salva_dati(dati)
-            st.success("Dati aggiornati dopo inserimento morti.")
-        except Exception as e:
-            st.error(f"Errore: {str(e)}")
+    with st.form("inserisci_morti"):
+        st.header("Inserisci polli morti")
+        box = st.radio("Seleziona il BOX:", [1, 2], horizontal=True)
+        morti_m = st.number_input("Maschi morti", min_value=0, step=1)
+        morti_f = st.number_input("Femmine morte", min_value=0, step=1)
+        conferma = st.form_submit_button("Conferma")
+        if conferma:
+            try:
+                if box == 1:
+                    dati["box1_maschi"] = max(0, dati["box1_maschi"] - morti_m)
+                    dati["box1_femmine"] = max(0, dati["box1_femmine"] - morti_f)
+                else:
+                    dati["box2_maschi"] = max(0, dati["box2_maschi"] - morti_m)
+                    dati["box2_femmine"] = max(0, dati["box2_femmine"] - morti_f)
+                salva_dati(dati)
+                st.success("Dati aggiornati dopo inserimento morti.")
+            except Exception as e:
+                st.error(f"Errore: {str(e)}")
 
 # ---------------- Streamlit App ---------------- #
 icon_path = "icona.ico"
