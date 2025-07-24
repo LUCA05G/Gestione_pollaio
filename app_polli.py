@@ -91,7 +91,13 @@ def mostra_form_morti():
                 else:
                     st.session_state["box2_maschi"] = max(0, st.session_state["box2_maschi"] - morti_m)
                     st.session_state["box2_femmine"] = max(0, st.session_state["box2_femmine"] - morti_f)
-                salva_dati(st.session_state)
+                # Salva i dati aggiornati
+                salva_dati({
+                    "box1_maschi": st.session_state["box1_maschi"],
+                    "box1_femmine": st.session_state["box1_femmine"],
+                    "box2_maschi": st.session_state["box2_maschi"],
+                    "box2_femmine": st.session_state["box2_femmine"],
+                })
                 st.success("Dati aggiornati dopo inserimento morti.")
             except Exception as e:
                 st.error(f"Errore: {str(e)}")
@@ -104,18 +110,25 @@ else:
     st.set_page_config(page_title="Gestione Polli", page_icon="🐔", layout="centered")
 
 st.title("Gestione Polli e Mangime")
+
+# Inizializza st.session_state con dati caricati se non esistono già
 if "box1_maschi" not in st.session_state:
     dati = carica_dati()
     st.session_state.update(dati)
 
 with st.sidebar:
     st.header("Dati Box")
-    st.session_state["box1_maschi"] = st.number_input("Box 1 - Maschi", 0, 1000, st.session_state["box1_maschi"], key="box1_maschi")
-    st.session_state["box1_femmine"] = st.number_input("Box 1 - Femmine", 0, 1000, st.session_state["box1_femmine"], key="box1_femmine")
-    st.session_state["box2_maschi"] = st.number_input("Box 2 - Maschi", 0, 1000, st.session_state["box2_maschi"], key="box2_maschi")
-    st.session_state["box2_femmine"] = st.number_input("Box 2 - Femmine", 0, 1000, st.session_state["box2_femmine"], key="box2_femmine")
+    st.number_input("Box 1 - Maschi", 0, 1000, st.session_state["box1_maschi"], key="box1_maschi")
+    st.number_input("Box 1 - Femmine", 0, 1000, st.session_state["box1_femmine"], key="box1_femmine")
+    st.number_input("Box 2 - Maschi", 0, 1000, st.session_state["box2_maschi"], key="box2_maschi")
+    st.number_input("Box 2 - Femmine", 0, 1000, st.session_state["box2_femmine"], key="box2_femmine")
     if st.button("Salva dati"):
-        salva_dati(st.session_state)
+        salva_dati({
+            "box1_maschi": st.session_state["box1_maschi"],
+            "box1_femmine": st.session_state["box1_femmine"],
+            "box2_maschi": st.session_state["box2_maschi"],
+            "box2_femmine": st.session_state["box2_femmine"],
+        })
         st.success("Dati salvati correttamente.")
 
 if st.button("Inserisci polli morti"):
@@ -126,12 +139,12 @@ tipo = st.selectbox("Tipo calcolo", ["misto", "solo maschi", "solo femmine"])
 
 maschi = femmine = 0
 if tipo in ["misto", "solo maschi"]:
-    maschi = st.number_input("Numero maschi", 0, 1000, 0)
+    maschi = st.number_input("Numero maschi", 0, 1000, 0, key="simul_maschi")
 if tipo in ["misto", "solo femmine"]:
-    femmine = st.number_input("Numero femmine", 0, 1000, 0)
+    femmine = st.number_input("Numero femmine", 0, 1000, 0, key="simul_femmine")
 
-mangime = st.number_input("Mangime disponibile (kg)", 0.0, 9999.0, 0.0, step=0.1)
-giorno = st.number_input("Giorno iniziale (1 = primo giorno)", 1, 100, 1)
+mangime = st.number_input("Mangime disponibile (kg)", 0.0, 9999.0, 0.0, step=0.1, key="simul_mangime")
+giorno = st.number_input("Giorno iniziale (1 = primo giorno)", 1, 100, 1, key="simul_giorno")
 
 if st.button("Calcola durata mangime"):
     risultato = esegui_calcolo(maschi, femmine, mangime, giorno)
