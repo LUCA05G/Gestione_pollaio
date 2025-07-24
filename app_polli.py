@@ -1,4 +1,3 @@
-# Versione Streamlit della tua app con icona personalizzata
 import streamlit as st
 import json
 import os
@@ -78,27 +77,36 @@ def esegui_calcolo(maschi, femmine, mangime, giorno_iniziale):
 
 # ---------------- Gestione polli morti ---------------- #
 def mostra_form_morti():
-    with st.form("inserisci_morti"):
-        st.header("Inserisci polli morti")
-        box = st.radio("Seleziona il BOX:", [1, 2], horizontal=True)
-        morti_m = st.number_input("Maschi morti", min_value=0, step=1, key="morti_m")
-        morti_f = st.number_input("Femmine morte", min_value=0, step=1, key="morti_f")
-        conferma = st.form_submit_button("Conferma decessi")
-        if conferma:
-            try:
-                if box == 1:
-                    dati["box1_maschi"] = max(0, dati["box1_maschi"] - morti_m)
-                    dati["box1_femmine"] = max(0, dati["box1_femmine"] - morti_f)
-                else:
-                    dati["box2_maschi"] = max(0, dati["box2_maschi"] - morti_m)
-                    dati["box2_femmine"] = max(0, dati["box2_femmine"] - morti_f)
-                salva_dati(dati)
-                st.session_state.update(dati)
-                st.success("Dati aggiornati dopo inserimento morti.")
-            except Exception as e:
-                st.error(f"Errore: {str(e)}")
+    st.header("Inserisci polli morti")
+    box = st.radio("Seleziona il BOX:", [1, 2], horizontal=True, key="box_morti")
+    morti_m = st.number_input("Maschi morti", min_value=0, step=1, key="morti_m")
+    morti_f = st.number_input("Femmine morte", min_value=0, step=1, key="morti_f")
+
+    if st.button("Conferma decessi"):
+        try:
+            if box == 1:
+                nuovi_maschi = max(0, st.session_state.get("box1_maschi", dati["box1_maschi"]) - morti_m)
+                nuovi_femmine = max(0, st.session_state.get("box1_femmine", dati["box1_femmine"]) - morti_f)
+                st.session_state["box1_maschi"] = nuovi_maschi
+                st.session_state["box1_femmine"] = nuovi_femmine
+                dati["box1_maschi"] = nuovi_maschi
+                dati["box1_femmine"] = nuovi_femmine
+            else:
+                nuovi_maschi = max(0, st.session_state.get("box2_maschi", dati["box2_maschi"]) - morti_m)
+                nuovi_femmine = max(0, st.session_state.get("box2_femmine", dati["box2_femmine"]) - morti_f)
+                st.session_state["box2_maschi"] = nuovi_maschi
+                st.session_state["box2_femmine"] = nuovi_femmine
+                dati["box2_maschi"] = nuovi_maschi
+                dati["box2_femmine"] = nuovi_femmine
+
+            salva_dati(dati)
+            st.success("Dati aggiornati dopo inserimento morti.")
+            st.experimental_rerun()
+        except Exception as e:
+            st.error(f"Errore: {str(e)}")
 
 # ---------------- Streamlit App ---------------- #
+
 icon_path = "icona.ico"
 if os.path.exists(icon_path):
     st.set_page_config(page_title="Gestione Polli", page_icon=Image.open(icon_path), layout="centered")
@@ -108,13 +116,21 @@ else:
 st.title("Gestione Polli e Mangime")
 dati = carica_dati()
 
+# Sincronizza dati con session_state per mostrare valori aggiornati
+for key in dati:
+    if key not in st.session_state:
+        st.session_state[key] = dati[key]
+
 with st.sidebar:
     st.header("Dati Box")
-    dati["box1_maschi"] = st.number_input("Box 1 - Maschi", 0, 1000, dati["box1_maschi"], key="box1_maschi")
-    dati["box1_femmine"] = st.number_input("Box 1 - Femmine", 0, 1000, dati["box1_femmine"], key="box1_femmine")
-    dati["box2_maschi"] = st.number_input("Box 2 - Maschi", 0, 1000, dati["box2_maschi"], key="box2_maschi")
-    dati["box2_femmine"] = st.number_input("Box 2 - Femmine", 0, 1000, dati["box2_femmine"], key="box2_femmine")
+    st.session_state["box1_maschi"] = st.number_input("Box 1 - Maschi", 0, 1000, st.session_state["box1_maschi"], key="box1_maschi")
+    st.session_state["box1_femmine"] = st.number_input("Box 1 - Femmine", 0, 1000, st.session_state["box1_femmine"], key="box1_femmine")
+    st.session_state["box2_maschi"] = st.number_input("Box 2 - Maschi", 0, 1000, st.session_state["box2_maschi"], key="box2_maschi")
+    st.session_state["box2_femmine"] = st.number_input("Box 2 - Femmine", 0, 1000, st.session_state["box2_femmine"], key="box2_femmine")
     if st.button("Salva dati"):
+        # Aggiorna il dict dati con session_state prima di salvare
+        for key in dati:
+            dati[key] = st.session_state[key]
         salva_dati(dati)
         st.success("Dati salvati correttamente.")
 
