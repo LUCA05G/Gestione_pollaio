@@ -81,9 +81,9 @@ def mostra_form_morti():
     with st.form("inserisci_morti"):
         st.header("Inserisci polli morti")
         box = st.radio("Seleziona il BOX:", [1, 2], horizontal=True)
-        morti_m = st.number_input("Maschi morti", min_value=0, step=1)
-        morti_f = st.number_input("Femmine morte", min_value=0, step=1)
-        conferma = st.form_submit_button("Conferma")
+        morti_m = st.number_input("Maschi morti", min_value=0, step=1, key="morti_m")
+        morti_f = st.number_input("Femmine morte", min_value=0, step=1, key="morti_f")
+        conferma = st.form_submit_button("Conferma decessi")
         if conferma:
             try:
                 if box == 1:
@@ -93,6 +93,7 @@ def mostra_form_morti():
                     dati["box2_maschi"] = max(0, dati["box2_maschi"] - morti_m)
                     dati["box2_femmine"] = max(0, dati["box2_femmine"] - morti_f)
                 salva_dati(dati)
+                st.session_state.update(dati)
                 st.success("Dati aggiornati dopo inserimento morti.")
             except Exception as e:
                 st.error(f"Errore: {str(e)}")
@@ -109,10 +110,10 @@ dati = carica_dati()
 
 with st.sidebar:
     st.header("Dati Box")
-    dati["box1_maschi"] = st.number_input("Box 1 - Maschi", 0, 1000, dati["box1_maschi"])
-    dati["box1_femmine"] = st.number_input("Box 1 - Femmine", 0, 1000, dati["box1_femmine"])
-    dati["box2_maschi"] = st.number_input("Box 2 - Maschi", 0, 1000, dati["box2_maschi"])
-    dati["box2_femmine"] = st.number_input("Box 2 - Femmine", 0, 1000, dati["box2_femmine"])
+    dati["box1_maschi"] = st.number_input("Box 1 - Maschi", 0, 1000, dati["box1_maschi"], key="box1_maschi")
+    dati["box1_femmine"] = st.number_input("Box 1 - Femmine", 0, 1000, dati["box1_femmine"], key="box1_femmine")
+    dati["box2_maschi"] = st.number_input("Box 2 - Maschi", 0, 1000, dati["box2_maschi"], key="box2_maschi")
+    dati["box2_femmine"] = st.number_input("Box 2 - Femmine", 0, 1000, dati["box2_femmine"], key="box2_femmine")
     if st.button("Salva dati"):
         salva_dati(dati)
         st.success("Dati salvati correttamente.")
