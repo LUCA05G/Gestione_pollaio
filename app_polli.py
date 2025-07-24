@@ -77,36 +77,26 @@ def esegui_calcolo(maschi, femmine, mangime, giorno_iniziale):
 
 # ---------------- Gestione polli morti ---------------- #
 def mostra_form_morti():
-    st.header("Inserisci polli morti")
-    box = st.radio("Seleziona il BOX:", [1, 2], horizontal=True, key="box_morti")
-    morti_m = st.number_input("Maschi morti", min_value=0, step=1, key="morti_m")
-    morti_f = st.number_input("Femmine morte", min_value=0, step=1, key="morti_f")
-
-    if st.button("Conferma decessi"):
-        try:
-            if box == 1:
-                nuovi_maschi = max(0, st.session_state.get("box1_maschi", dati["box1_maschi"]) - morti_m)
-                nuovi_femmine = max(0, st.session_state.get("box1_femmine", dati["box1_femmine"]) - morti_f)
-                st.session_state["box1_maschi"] = nuovi_maschi
-                st.session_state["box1_femmine"] = nuovi_femmine
-                dati["box1_maschi"] = nuovi_maschi
-                dati["box1_femmine"] = nuovi_femmine
-            else:
-                nuovi_maschi = max(0, st.session_state.get("box2_maschi", dati["box2_maschi"]) - morti_m)
-                nuovi_femmine = max(0, st.session_state.get("box2_femmine", dati["box2_femmine"]) - morti_f)
-                st.session_state["box2_maschi"] = nuovi_maschi
-                st.session_state["box2_femmine"] = nuovi_femmine
-                dati["box2_maschi"] = nuovi_maschi
-                dati["box2_femmine"] = nuovi_femmine
-
-            salva_dati(dati)
-            st.success("Dati aggiornati dopo inserimento morti.")
-            st.experimental_rerun()
-        except Exception as e:
-            st.error(f"Errore: {str(e)}")
+    with st.form("inserisci_morti"):
+        st.header("Inserisci polli morti")
+        box = st.radio("Seleziona il BOX:", [1, 2], horizontal=True)
+        morti_m = st.number_input("Maschi morti", min_value=0, step=1, key="morti_m")
+        morti_f = st.number_input("Femmine morte", min_value=0, step=1, key="morti_f")
+        conferma = st.form_submit_button("Conferma decessi")
+        if conferma:
+            try:
+                if box == 1:
+                    st.session_state["box1_maschi"] = max(0, st.session_state["box1_maschi"] - morti_m)
+                    st.session_state["box1_femmine"] = max(0, st.session_state["box1_femmine"] - morti_f)
+                else:
+                    st.session_state["box2_maschi"] = max(0, st.session_state["box2_maschi"] - morti_m)
+                    st.session_state["box2_femmine"] = max(0, st.session_state["box2_femmine"] - morti_f)
+                salva_dati(st.session_state)
+                st.success("Dati aggiornati dopo inserimento morti.")
+            except Exception as e:
+                st.error(f"Errore: {str(e)}")
 
 # ---------------- Streamlit App ---------------- #
-
 icon_path = "icona.ico"
 if os.path.exists(icon_path):
     st.set_page_config(page_title="Gestione Polli", page_icon=Image.open(icon_path), layout="centered")
@@ -114,32 +104,18 @@ else:
     st.set_page_config(page_title="Gestione Polli", page_icon="🐔", layout="centered")
 
 st.title("Gestione Polli e Mangime")
-dati = carica_dati()
-
-# Inizializza valori in session_state se non esistono
-for key in dati:
-    if key not in st.session_state:
-        st.session_state[key] = dati[key]
+if "box1_maschi" not in st.session_state:
+    dati = carica_dati()
+    st.session_state.update(dati)
 
 with st.sidebar:
     st.header("Dati Box")
-    val_box1_maschi = st.number_input("Box 1 - Maschi", 0, 1000, st.session_state.get("box1_maschi", 0), key="box1_maschi")
-    val_box1_femmine = st.number_input("Box 1 - Femmine", 0, 1000, st.session_state.get("box1_femmine", 0), key="box1_femmine")
-    val_box2_maschi = st.number_input("Box 2 - Maschi", 0, 1000, st.session_state.get("box2_maschi", 0), key="box2_maschi")
-    val_box2_femmine = st.number_input("Box 2 - Femmine", 0, 1000, st.session_state.get("box2_femmine", 0), key="box2_femmine")
-
+    st.session_state["box1_maschi"] = st.number_input("Box 1 - Maschi", 0, 1000, st.session_state["box1_maschi"], key="box1_maschi")
+    st.session_state["box1_femmine"] = st.number_input("Box 1 - Femmine", 0, 1000, st.session_state["box1_femmine"], key="box1_femmine")
+    st.session_state["box2_maschi"] = st.number_input("Box 2 - Maschi", 0, 1000, st.session_state["box2_maschi"], key="box2_maschi")
+    st.session_state["box2_femmine"] = st.number_input("Box 2 - Femmine", 0, 1000, st.session_state["box2_femmine"], key="box2_femmine")
     if st.button("Salva dati"):
-        st.session_state["box1_maschi"] = val_box1_maschi
-        st.session_state["box1_femmine"] = val_box1_femmine
-        st.session_state["box2_maschi"] = val_box2_maschi
-        st.session_state["box2_femmine"] = val_box2_femmine
-
-        dati["box1_maschi"] = val_box1_maschi
-        dati["box1_femmine"] = val_box1_femmine
-        dati["box2_maschi"] = val_box2_maschi
-        dati["box2_femmine"] = val_box2_femmine
-
-        salva_dati(dati)
+        salva_dati(st.session_state)
         st.success("Dati salvati correttamente.")
 
 if st.button("Inserisci polli morti"):
