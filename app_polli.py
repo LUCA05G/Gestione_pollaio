@@ -104,11 +104,11 @@ morti_f = st.number_input("Femmine morte", min_value=0, step=1, key="morti_f")
 if st.button("Conferma"):
     dati = st.session_state.dati_salvati
     if box_scelto == 1:
-        dati["box1_maschi"] = max(0, dati["box1_maschi"] - morti_m)
-        dati["box1_femmine"] = max(0, dati["box1_femmine"] - morti_f)
+        dati["box1_maschi"] = dati["box1_maschi"] - morti_m
+        dati["box1_femmine"] = dati["box1_femmine"] - morti_f
     else:
-        dati["box2_maschi"] = max(0, dati["box2_maschi"] - morti_m)
-        dati["box2_femmine"] = max(0, dati["box2_femmine"] - morti_f)
+        dati["box2_maschi"] = dati["box2_maschi"] - morti_m
+        dati["box2_femmine"] = dati["box2_femmine"] - morti_f
     salva_dati(st.session_state.dati_salvati)
     st.success("Dati aggiornati dopo inserimento morti.")
 
