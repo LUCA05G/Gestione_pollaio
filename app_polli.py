@@ -4,8 +4,18 @@ import json
 import os
 from datetime import date, timedelta
 from PIL import Image
+import locale
 
 FILE_DATI = "dati_polli.json"
+
+# Imposta la localizzazione in italiano per la data
+try:
+    locale.setlocale(locale.LC_TIME, 'it_IT.UTF-8')
+except locale.Error:
+    try:
+        locale.setlocale(locale.LC_TIME, 'it_IT')
+    except locale.Error:
+        pass  # fallback se locale non disponibile
 
 # ---------------- Funzioni per i dati ---------------- #
 def salva_dati(dati):
@@ -67,7 +77,7 @@ def esegui_calcolo(maschi, femmine, mangime, giorno_iniziale):
         return f"Errore: {str(e)}"
 
 # ---------------- Gestione polli morti ---------------- #
-def inserisci_morti():
+def mostra_form_morti():
     st.header("Inserisci polli morti")
     box = st.radio("Seleziona il BOX:", [1, 2], horizontal=True)
     morti_m = st.number_input("Maschi morti", min_value=0, step=1)
@@ -105,7 +115,8 @@ with st.sidebar:
         salva_dati(dati)
         st.success("Dati salvati correttamente.")
 
-inserisci_morti()
+if st.button("Inserisci polli morti"):
+    mostra_form_morti()
 
 st.header("Simula consumo mangime")
 tipo = st.selectbox("Tipo calcolo", ["misto", "solo maschi", "solo femmine"])
