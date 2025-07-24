@@ -13,7 +13,17 @@ st.set_page_config(
     layout="centered"
 )
 
-locale.setlocale(locale.LC_TIME, 'italian')
+import locale
+
+# Tenta le localizzazioni più comuni
+def imposta_locale_italiano():
+    for loc in ['it_IT.utf8', 'it_IT.UTF-8', 'it_IT', 'italian']:
+        try:
+            locale.setlocale(locale.LC_TIME, loc)
+            return
+       
+imposta_locale_italiano()
+
 
 
 
