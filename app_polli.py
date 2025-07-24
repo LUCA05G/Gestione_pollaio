@@ -6,7 +6,6 @@ import locale
 
 FILE_DATI = "dati_polli.json"
 
-# Carica o inizializza dati
 def carica_dati():
     if os.path.exists(FILE_DATI):
         with open(FILE_DATI, "r") as f:
@@ -23,7 +22,6 @@ def salva_dati(dati):
     with open(FILE_DATI, "w") as f:
         json.dump(dati, f)
 
-# Calcolo durata mangime (stessa logica)
 def esegui_calcolo(maschi, femmine, mangime, giorno_iniziale):
     try:
         with open("Performance Femmine.txt", "r", encoding="utf-8") as fileF:
@@ -68,49 +66,66 @@ def esegui_calcolo(maschi, femmine, mangime, giorno_iniziale):
     except Exception as e:
         return f"Errore nel calcolo: {str(e)}"
 
-# Inizializza dati nello session state
+# Inizializza dati
 if "dati_salvati" not in st.session_state:
     st.session_state.dati_salvati = carica_dati()
+
+# Variabili temporanee per morti (in session state)
+if "morti_m_temp" not in st.session_state:
+    st.session_state.morti_m_temp = 0
+if "morti_f_temp" not in st.session_state:
+    st.session_state.morti_f_temp = 0
+if "box_scelto_temp" not in st.session_state:
+    st.session_state.box_scelto_temp = 1
 
 # Sidebar: modifica dati box
 st.sidebar.header("Dati Box")
 
 for box_num in [1, 2]:
-    st.sidebar.subheader(f"BOX {box_num}")
     maschi_key = f"box{box_num}_maschi"
     femmine_key = f"box{box_num}_femmine"
-    st.session_state.dati_salvati[maschi_key] = st.sidebar.number_input(f"Maschi BOX {box_num}",
-                                                                       min_value=0,
-                                                                       value=st.session_state.dati_salvati[maschi_key],
-                                                                       key=maschi_key)
-    st.session_state.dati_salvati[femmine_key] = st.sidebar.number_input(f"Femmine BOX {box_num}",
-                                                                        min_value=0,
-                                                                        value=st.session_state.dati_salvati[femmine_key],
-                                                                        key=femmine_key)
+    st.session_state.dati_salvati[maschi_key] = st.sidebar.number_input(
+        f"Maschi BOX {box_num}",
+        min_value=0,
+        value=st.session_state.dati_salvati[maschi_key],
+        key=maschi_key
+    )
+    st.session_state.dati_salvati[femmine_key] = st.sidebar.number_input(
+        f"Femmine BOX {box_num}",
+        min_value=0,
+        value=st.session_state.dati_salvati[femmine_key],
+        key=femmine_key
+    )
 
+# Input morti in sidebar, aggiornati in variabili temporanee
+st.sidebar.header("Inserisci Polli Morti")
+st.session_state.box_scelto_temp = st.sidebar.radio("Seleziona BOX", [1, 2], index=st.session_state.box_scelto_temp - 1, key="box_scelto_temp")
+st.session_state.morti_m_temp = st.sidebar.number_input("Maschi morti", min_value=0, step=1, value=st.session_state.morti_m_temp, key="morti_m_temp")
+st.session_state.morti_f_temp = st.sidebar.number_input("Femmine morte", min_value=0, step=1, value=st.session_state.morti_f_temp, key="morti_f_temp")
+
+# Pulsante salva dati applica anche morti
 if st.sidebar.button("Salva dati"):
-    salva_dati(st.session_state.dati_salvati)
-    st.sidebar.success("Dati salvati correttamente.")
-
-# Main app
-st.title("Gestione Polli e Mangime")
-
-# Inserisci polli morti
-st.header("Inserisci polli morti")
-box_scelto = st.radio("Seleziona il BOX:", [1, 2])
-morti_m = st.number_input("Maschi morti", min_value=0, step=1, key="morti_m")
-morti_f = st.number_input("Femmine morte", min_value=0, step=1, key="morti_f")
-
-if st.button("Conferma decessi"):
     dati = st.session_state.dati_salvati
-    if box_scelto == 1:
+    # Applica morti temporanei
+    box = st.session_state.box_scelto_temp
+    morti_m = st.session_state.morti_m_temp
+    morti_f = st.session_state.morti_f_temp
+
+    if box == 1:
         dati["box1_maschi"] = max(0, dati["box1_maschi"] - morti_m)
         dati["box1_femmine"] = max(0, dati["box1_femmine"] - morti_f)
     else:
         dati["box2_maschi"] = max(0, dati["box2_maschi"] - morti_m)
         dati["box2_femmine"] = max(0, dati["box2_femmine"] - morti_f)
+
     salva_dati(dati)
-    st.success("Dati aggiornati dopo inserimento morti.")
+    st.success("Dati aggiornati e salvati correttamente.")
+    # Reset morti temporanei a zero dopo salvataggio
+    st.session_state.morti_m_temp = 0
+    st.session_state.morti_f_temp = 0
+
+# Main app
+st.title("Gestione Polli e Mangime")
 
 # Visualizza dati correnti
 st.subheader("Dati attuali box")
