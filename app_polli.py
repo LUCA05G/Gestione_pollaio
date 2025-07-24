@@ -116,21 +116,29 @@ else:
 st.title("Gestione Polli e Mangime")
 dati = carica_dati()
 
-# Sincronizza dati con session_state per mostrare valori aggiornati
+# Inizializza valori in session_state se non esistono
 for key in dati:
     if key not in st.session_state:
         st.session_state[key] = dati[key]
 
 with st.sidebar:
     st.header("Dati Box")
-    st.session_state["box1_maschi"] = st.number_input("Box 1 - Maschi", 0, 1000, st.session_state["box1_maschi"], key="box1_maschi")
-    st.session_state["box1_femmine"] = st.number_input("Box 1 - Femmine", 0, 1000, st.session_state["box1_femmine"], key="box1_femmine")
-    st.session_state["box2_maschi"] = st.number_input("Box 2 - Maschi", 0, 1000, st.session_state["box2_maschi"], key="box2_maschi")
-    st.session_state["box2_femmine"] = st.number_input("Box 2 - Femmine", 0, 1000, st.session_state["box2_femmine"], key="box2_femmine")
+    val_box1_maschi = st.number_input("Box 1 - Maschi", 0, 1000, st.session_state.get("box1_maschi", 0), key="box1_maschi")
+    val_box1_femmine = st.number_input("Box 1 - Femmine", 0, 1000, st.session_state.get("box1_femmine", 0), key="box1_femmine")
+    val_box2_maschi = st.number_input("Box 2 - Maschi", 0, 1000, st.session_state.get("box2_maschi", 0), key="box2_maschi")
+    val_box2_femmine = st.number_input("Box 2 - Femmine", 0, 1000, st.session_state.get("box2_femmine", 0), key="box2_femmine")
+
     if st.button("Salva dati"):
-        # Aggiorna il dict dati con session_state prima di salvare
-        for key in dati:
-            dati[key] = st.session_state[key]
+        st.session_state["box1_maschi"] = val_box1_maschi
+        st.session_state["box1_femmine"] = val_box1_femmine
+        st.session_state["box2_maschi"] = val_box2_maschi
+        st.session_state["box2_femmine"] = val_box2_femmine
+
+        dati["box1_maschi"] = val_box1_maschi
+        dati["box1_femmine"] = val_box1_femmine
+        dati["box2_maschi"] = val_box2_maschi
+        dati["box2_femmine"] = val_box2_femmine
+
         salva_dati(dati)
         st.success("Dati salvati correttamente.")
 
