@@ -4,6 +4,30 @@ import os
 from datetime import date, timedelta
 import locale
 
+st.set_page_config(
+    page_title="Gestione Pollaio",
+    page_icon="icona.ico",  # metti il file "icona.ico" nella stessa cartella
+    layout="centered"
+)
+
+PASSWORD_CORRETTA = "Pollolarino"
+
+if "autenticato" not in st.session_state:
+    st.session_state.autenticato = False
+
+if not st.session_state.autenticato:
+    st.title("🔐 Inserisci la password per accedere")
+    password = st.text_input("Password", type="password")
+    if st.button("Entra"):
+        if password == PASSWORD_CORRETTA:
+            st.session_state.autenticato = True
+            st.experimental_rerun()
+        else:
+            st.error("Password errata.")
+    st.stop()
+
+
+
 FILE_DATI = "dati_polli.json"
 
 # Carica dati da file o inizializza
