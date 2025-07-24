@@ -7,6 +7,12 @@ import os
 
 
 
+st.set_page_config(title="Gestione Polli e Mangime", page_icon=Image.open("icona.ico"), layout="centered")
+locale.setlocale(locale.LC_TIME, 'it_IT')
+
+
+
+
 def login():
     password = st.text_input("Inserisci la password per accedere:", type="password")
     if password == "PolLarino":
@@ -23,13 +29,6 @@ else:
     st.stop()
 
 
-
-
-
-
-FILE_DATI = "dati_polli.json"
-
-# --- Carica dati da file o inizializza ---
 def carica_dati():
     if "dati_salvati" not in st.session_state:
         if os.path.exists(FILE_DATI):
@@ -47,38 +46,39 @@ def salva_dati():
     with open(FILE_DATI, "w") as f:
         json.dump(st.session_state.dati_salvati, f)
 
-# --- Calcolo durata mangime ---
-def calcola_giorni(maschi, femmine, mangime):
-    try:
-        with open("Performance Femmine.txt", "r", encoding="utf-8") as fileF:
-            valoriF = [float(line.strip().split()[1]) for line in fileF]
 
-        with open("Performance Maschi.txt", "r", encoding="utf-8") as fileM:
-            valoriM = [float(line.strip().split()[1]) for line in fileM]
+def calcola_mangime(maschi, femmine, mangime, giorno_iniziale):
+    with open("Performance Femmine.txt", "r", encoding="utf-8") as f:
+        valoriF = [float(riga.split()[1]) for riga in f]
+    with open("Performance Maschi.txt", "r", encoding="utf-8") as f:
+        valoriM = [float(riga.split()[1]) for riga in f]
 
-        giorni = 0
-        while mangime >= 0 and giorni < len(valoriM):
-            consumoM = maschi * valoriM[giorni]
-            consumoF = femmine * valoriF[giorni]
-            mangime -= (consumoM + consumoF)
-            if mangime >= 0:
-                giorni += 1
+    if giorno_iniziale < 1:
+        return "✅ Il giorno iniziale deve essere almeno 1."
 
-        oggi = date.today()
-        futura = oggi + timedelta(days=giorni - 1)
-        try:
-            locale.setlocale(locale.LC_TIME, 'it_IT.UTF-8')  # Italiano
-        except:
-            pass  # in caso di errore locale lascia default
+    indice = giorno_iniziale - 1
+    if indice >= len(valoriM) or indice >= len(valoriF):
+        return ⚠️ Giorno iniziale oltre i dati disponibili."
 
+    giorni = 0
+    while mangime > 0 and indice < len(valoriM):
+        mangime -= maschi * valoriM[indice] + femmine * valoriF[indice]
         if mangime >= 0:
-            return f"Il mangime durerà fino a {futura.strftime('%A %d %B %Y')} con sufficienza."
+            giorni += 1
+            indice += 1
         else:
-            return (f"Il mangime terminerà il {futura.strftime('%A %d %B %Y')}.\n"
-                    f"Alla fine della giornata mancheranno circa {abs(mangime):.2f} kg.")
+            break
 
-    except Exception as e:
-        return f"Errore nel calcolo: {e}"
+    futura = date.today() + timedelta(days=giorni)
+    if mangime < 0:
+        return f"❌ Mangime finisce il {futura.strftime('%A %d %B %Y')} (giorno {giorno_iniziale + giorni}). Mancano {abs(mangime):.3f} kg."
+    elif mangime == 0:
+        return f"✅ Mangime finisce esattamente il {futura.strftime('%A %d %B %Y')} (giorno {giorno_iniziale + giorni})."
+    else:
+        return f"✅ Mangime sufficiente fino al {futura.strftime('%A %d %B %Y')} (giorno {giorno_iniziale + giorni}). Rimangono {mangime:.3f} kg."
+
+
+
 
 # --- Funzione per aggiornare dati BOX ---
 def aggiorna_box(box_num, maschi, femmine):
@@ -95,6 +95,9 @@ def inserisci_morti(box_num, morti_m, morti_f):
 
 # --- App Streamlit ---
 st.title("🐔 Gestione Polli e Mangime 🐔")
+
+
+
 
 carica_dati()
 
