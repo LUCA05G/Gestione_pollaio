@@ -22,7 +22,7 @@ if not st.session_state.autenticato:
     if st.button("Entra"):
         if password == PASSWORD_CORRETTA:
             st.session_state.autenticato = True
-            st.experimental_rerun()
+            
         else:
             st.error("Password errata.")
     st.stop()
