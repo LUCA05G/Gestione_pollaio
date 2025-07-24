@@ -58,7 +58,7 @@ def calcola_mangime(maschi, femmine, mangime, giorno_iniziale):
 
     indice = giorno_iniziale - 1
     if indice >= len(valoriM) or indice >= len(valoriF):
-        return ⚠️ Giorno iniziale oltre i dati disponibili."
+        return  "Giorno iniziale oltre i dati disponibili."
 
     giorni = 0
     while mangime > 0 and indice < len(valoriM):
