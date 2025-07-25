@@ -6,6 +6,11 @@ import locale
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+st.set_page_config(
+    page_title="Gestione Pollaio",
+    page_icon="icona.ico",  # metti il file "icona.ico" nella stessa cartella
+    layout="centered"
+)
 
 GOOGLE_SHEET_KEY = "1na21EJVU2HzWZa7sc5yzIuEbCWs4-s0efViviHYZZmg"
 
