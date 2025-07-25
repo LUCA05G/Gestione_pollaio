@@ -3,6 +3,47 @@ import json
 import os
 from datetime import date, timedelta
 import locale
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
+
+GOOGLE_SHEET = "pollaio_dati"
+
+def carica_dati_da_google_sheet():
+    try:
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_name("creds.json", scope)
+        client = gspread.authorize(creds)
+
+        sheet = client.open(GOOGLE_SHEET).sheet1
+        records = sheet.get_all_records()
+
+        return {
+            "box1_maschi": int(records[0]["maschi"]),
+            "box1_femmine": int(records[0]["femmine"]),
+            "box2_maschi": int(records[1]["maschi"]),
+            "box2_femmine": int(records[1]["femmine"])
+        }
+
+    except Exception as e:
+        st.error(f"Errore caricamento Google Sheet: {e}")
+        return carica_dati_locale()
+
+
+def salva_dati_su_google_sheet(dati):
+    try:
+        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+        creds = ServiceAccountCredentials.from_json_keyfile_name("creds.json", scope)
+        client = gspread.authorize(creds)
+
+        sheet = client.open(GOOGLE_SHEET).sheet1
+        sheet.update('B2', [[dati["box1_maschi"]]])
+        sheet.update('C2', [[dati["box1_femmine"]]])
+        sheet.update('B3', [[dati["box2_maschi"]]])
+        sheet.update('C3', [[dati["box2_femmine"]]])
+
+    except Exception as e:
+        st.error(f"Errore salvataggio su Google Sheet: {e}")
 
 st.set_page_config(
     page_title="Gestione Pollaio",
@@ -98,7 +139,7 @@ def calcola_durata_mangime(maschi, femmine, mangime, giorno_iniziale):
 
 # Inizializza session_state dati_salvati
 if "dati_salvati" not in st.session_state:
-    st.session_state.dati_salvati = carica_dati()
+    st.session_state.dati_salvati = carica_dati_da_google_sheet()
 
 st.title("Gestione Polli e Mangime")
 
@@ -124,6 +165,7 @@ def aggiorna_box(box_num, maschi, femmine):
     st.session_state.dati_salvati[f"box{box_num}_maschi"] = maschi
     st.session_state.dati_salvati[f"box{box_num}_femmine"] = femmine
     salva_dati(st.session_state.dati_salvati)
+    salva_dati_su_google_sheet(st.session_state.dati_salvati)
     st.success(f"Dati BOX {box_num} aggiornati.")
 
 def inserisci_morti(box_num, morti_m, morti_f):
@@ -131,6 +173,7 @@ def inserisci_morti(box_num, morti_m, morti_f):
     dati[f"box{box_num}_maschi"] = max(0, dati[f"box{box_num}_maschi"] - morti_m)
     dati[f"box{box_num}_femmine"] = max(0, dati[f"box{box_num}_femmine"] - morti_f)
     salva_dati(dati)
+    salva_dati_su_google_sheet(dati)
     st.session_state.dati_salvati = dati
     st.success("Dati aggiornati dopo inserimento morti.")
 
