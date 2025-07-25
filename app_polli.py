@@ -7,7 +7,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 
-GOOGLE_SHEET_KEY = "2b99e8142dc993025a7f8c3d5d512b919d8f5f94"
+GOOGLE_SHEET_KEY = "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3GZZxRv2aiE2w\\n-----END PRIVATE KEY-----\\n"
 def get_gspread_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds_dict = st.secrets["gcp_service_account"]
