@@ -7,28 +7,25 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 
-GOOGLE_SHEET_KEY = "-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3GZZxRv2aiE2w\\n-----END PRIVATE KEY-----\\n"
+GOOGLE_SHEET_KEY = st.secrets["google_sheet_key"]
+
 def get_gspread_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-    creds_dict = st.secrets["gcp_service_account"]
-    credentials = ServiceAccountCredentials.from_json_keyfile_dict(dict(creds_dict), scope)
+    creds_dict = dict(st.secrets["gcp_service_account"])
+    creds_dict["private_key"] = creds_dict["private_key"].replace("\\n", "\n")
+    credentials = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
     return gspread.authorize(credentials)
 
-def carica_dati_da_google_sheet():
+def salva_dati_su_google_sheet(dati):
     try:
         client = get_gspread_client()
         sheet = client.open_by_key(GOOGLE_SHEET_KEY).sheet1
-        records = sheet.get_all_records()
-
-        return {
-            "box1_maschi": int(records[0]["maschi"]),
-            "box1_femmine": int(records[0]["femmine"]),
-            "box2_maschi": int(records[1]["maschi"]),
-            "box2_femmine": int(records[1]["femmine"])
-        }
+        sheet.update('B2', [[dati["box1_maschi"]]])
+        sheet.update('C2', [[dati["box1_femmine"]]])
+        sheet.update('B3', [[dati["box2_maschi"]]])
+        sheet.update('C3', [[dati["box2_femmine"]]])
     except Exception as e:
-        st.error(f"Errore caricamento Google Sheet: {e}")
-        return carica_dati()
+        st.error(f"Errore salvataggio su Google Sheet: {e}")
 
 def salva_dati_su_google_sheet(dati):
     try:
