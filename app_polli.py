@@ -6,6 +6,10 @@ import locale
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+import streamlit as st
+st.write(st.secrets)
+st.stop()
+
 
 GOOGLE_SHEET_KEY = st.secrets["google_sheet_key"]
 
