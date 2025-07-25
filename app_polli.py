@@ -8,13 +8,15 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 
 GOOGLE_SHEET = "pollaio_dati"
+def get_gspread_client():
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    creds_dict = st.secrets["gcp_service_account"]
+    credentials = ServiceAccountCredentials.from_json_keyfile_dict(dict(creds_dict), scope)
+    return gspread.authorize(credentials)
 
 def carica_dati_da_google_sheet():
     try:
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name("creds.json", scope)
-        client = gspread.authorize(creds)
-
+        client = get_gspread_client()
         sheet = client.open(GOOGLE_SHEET).sheet1
         records = sheet.get_all_records()
 
@@ -24,32 +26,21 @@ def carica_dati_da_google_sheet():
             "box2_maschi": int(records[1]["maschi"]),
             "box2_femmine": int(records[1]["femmine"])
         }
-
     except Exception as e:
         st.error(f"Errore caricamento Google Sheet: {e}")
-        return carica_dati_locale()
-
+        return carica_dati()
 
 def salva_dati_su_google_sheet(dati):
     try:
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_name("creds.json", scope)
-        client = gspread.authorize(creds)
-
+        client = get_gspread_client()
         sheet = client.open(GOOGLE_SHEET).sheet1
         sheet.update('B2', [[dati["box1_maschi"]]])
         sheet.update('C2', [[dati["box1_femmine"]]])
         sheet.update('B3', [[dati["box2_maschi"]]])
         sheet.update('C3', [[dati["box2_femmine"]]])
-
     except Exception as e:
         st.error(f"Errore salvataggio su Google Sheet: {e}")
 
-st.set_page_config(
-    page_title="Gestione Pollaio",
-    page_icon="icona.ico",  # metti il file "icona.ico" nella stessa cartella
-    layout="centered"
-)
 
 
 PASSWORD_CORRETTA = "pollo25"
