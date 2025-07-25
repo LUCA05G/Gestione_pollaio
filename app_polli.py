@@ -7,7 +7,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 
-GOOGLE_SHEET = "pollaio_dati"
+GOOGLE_SHEET_KEY = "2b99e8142dc993025a7f8c3d5d512b919d8f5f94"
 def get_gspread_client():
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds_dict = st.secrets["gcp_service_account"]
@@ -17,7 +17,7 @@ def get_gspread_client():
 def carica_dati_da_google_sheet():
     try:
         client = get_gspread_client()
-        sheet = client.open(GOOGLE_SHEET).sheet1
+        sheet = client.open_by_key(GOOGLE_SHEET_KEY).sheet1
         records = sheet.get_all_records()
 
         return {
